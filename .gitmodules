@@ -1,0 +1,3 @@
+[submodule "AutoFL"]
+	path = AutoFL
+	url = git@github.com:SasCezar/AutoFL.git
