@@ -9,9 +9,9 @@ class ComponentAnnotator:
 
     def _annotate_files(self):
         """
-
+        TODO: Use UI type call
         """
         abandoned_projects = self.project_extractor.find_abandoned_projects(10)
 
         for project in abandoned_projects:
-            label_files()
+            label_files()    
