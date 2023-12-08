@@ -1,3 +1,6 @@
 [submodule "AutoFL"]
 	path = AutoFL
 	url = git@github.com:SasCezar/AutoFL.git
+[submodule "wasteservice"]
+	path = wasteservice
+	url = git@github.com:acapiluppi/wasteservice.git
