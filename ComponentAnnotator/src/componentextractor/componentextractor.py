@@ -14,8 +14,7 @@ class ComponentExtractor:
     """
     Run arcan
     """
-
-    def check_status(self, path):
+    def check_status(self, path) -> bool:
         """
         Checks if the project has already been processed.
         :param path:
@@ -32,8 +31,9 @@ class ComponentExtractor:
         :param language:
         :return:
         """
+        # What is the point of this line? Is project a GitHub URL string?
         check_path = join(cfg.arcan_graphs, project.replace('/', '|'), '.completed')
-        completed = self.check_status(check_path)
+        completed = exists(check_path)
         try:
             if completed:
                 logger.info(f"Skipping {project} as it has already been processed")
@@ -96,3 +96,5 @@ class ComponentExtractor:
                 logger.info(f"Extracting features for {project} - Progress: {(i + 1) / len(projects) * 100:.2f}%")
                 self.run_arcan(cfg, project, language)
 
+if __name__ == '__main__':
+    ComponentExtractor().extract_graph()
