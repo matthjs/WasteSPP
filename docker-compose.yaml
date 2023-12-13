@@ -1,0 +1,65 @@
+version: "3.8"
+services:
+  pipeline:     # This is our stuff
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile     # TODO: Make this
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: bind
+        source: .
+        target: /pipeline   # yeah.
+
+  api:
+    build:
+      context: ./AutoFL
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8000:8000"
+      - "8888:8888"
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - type: bind
+        source: /AutoFL
+        target: /AutoFL/autofl
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: "auto_fl"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "temp"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    ports:
+        - "5432:5432"
+    volumes:
+      - ../auto_fl_db:/var/lib/postgresql/data
+      - ./docker/sql:/docker-entrypoint-initdb.d/
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+  ui:
+    build:
+      context: ./AutoFL/autofl-ui/
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8501:8501"
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - type: bind
+        source: /AutoFL/autofl-ui/
+        target: /AutoFL/autofl-ui
+    links:
+      - 'api:auto-fl'

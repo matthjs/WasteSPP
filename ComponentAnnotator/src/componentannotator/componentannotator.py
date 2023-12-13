@@ -1,7 +1,6 @@
 from typing import List
 
 from typing import List
-import streamlit as st
 import numpy as np
 import pandas as pd
 import requests
@@ -25,7 +24,6 @@ class ComponentAnnotator:
             ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
             print(ret)
 
-    @st.cache_data(show_spinner=False)
     def _annotate_file(self, project_name: str, remote: str, languages: List[str]):
         url = 'http://auto-fl:8000/label/files'
         analysis = {
