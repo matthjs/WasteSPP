@@ -11,6 +11,13 @@ from omegaconf import DictConfig
 
 
 class ComponentExtractor:
+    def __init__(self):
+        self.arcan_graphs: str = ""
+        self.arcan_script: str = "../arcan/arcan.sh"
+        self.arcan_path: str = ""
+        self.arcan_out = None
+        self.logs_path: str = "../arcan"
+
     """
     Run arcan
     """
@@ -33,7 +40,7 @@ class ComponentExtractor:
         """
         # What is the point of this line? Is project a GitHub URL string?
         check_path = join(cfg.arcan_graphs, project.replace('/', '|'), '.completed')
-        completed = exists(check_path)
+        completed = self.check_status(check_path)
         try:
             if completed:
                 logger.info(f"Skipping {project} as it has already been processed")
@@ -67,34 +74,31 @@ class ComponentExtractor:
                 shutil.rmtree(repo_path, ignore_errors=True)
             return
 
-    @hydra.main(config_path="../conf", config_name="main", version_base="1.2")
-    def extract_graph(self, cfg: DictConfig):
-        """
-        Extracts graph from a project including the git history (augmented data).
-        :param cfg:
-        :return:
-        """
-        projects = pd.read_csv(cfg.dataset)
-        if 'language' not in projects:
-            projects['language'] = [cfg.language] * len(projects)
-
-        projects['language'] = projects['language'].str.upper()
-        projects = projects[projects['language'] == cfg.language.upper()]
-        languages = projects['language']
-        projects = projects['full_name']
-
-        logger.info(f"Extracting graphs for {len(projects)} projects")
-
-        Path(join(cfg.logs_path, 'arcan')).mkdir(parents=True, exist_ok=True)
-        if cfg.num_workers > 1:
-            logger.info(f"Using {cfg.num_workers} workers")
-            from multiprocessing import Pool
-            with Pool(cfg.num_workers) as p:
-                p.starmap(self.run_arcan, zip([cfg] * len(projects), projects, languages))
-        else:
-            for i, (project, language) in enumerate(zip(projects, languages)):
-                logger.info(f"Extracting features for {project} - Progress: {(i + 1) / len(projects) * 100:.2f}%")
-                self.run_arcan(cfg, project, language)
-
-if __name__ == '__main__':
-    ComponentExtractor().extract_graph()
+    # @hydra.main(config_path="../conf", config_name="main", version_base="1.2")
+    # def extract_graph(self, cfg: DictConfig):
+    #     """
+    #     Extracts graph from a project including the git history (augmented data).
+    #     :param cfg:
+    #     :return:
+    #     """
+    #     projects = pd.read_csv(cfg.dataset)
+    #     if 'language' not in projects:
+    #         projects['language'] = [cfg.language] * len(projects)
+    #
+    #     projects['language'] = projects['language'].str.upper()
+    #     projects = projects[projects['language'] == cfg.language.upper()]
+    #     languages = projects['language']
+    #     projects = projects['full_name']
+    #
+    #     logger.info(f"Extracting graphs for {len(projects)} projects")
+    #
+    #     Path(join(cfg.logs_path, 'arcan')).mkdir(parents=True, exist_ok=True)
+    #     if cfg.num_workers > 1:
+    #         logger.info(f"Using {cfg.num_workers} workers")
+    #         from multiprocessing import Pool
+    #         with Pool(cfg.num_workers) as p:
+    #             p.starmap(self.run_arcan, zip([cfg] * len(projects), projects, languages))
+    #     else:
+    #         for i, (project, language) in enumerate(zip(projects, languages)):
+    #             logger.info(f"Extracting features for {project} - Progress: {(i + 1) / len(projects) * 100:.2f}%")
+    #             self.run_arcan(cfg, project, language)

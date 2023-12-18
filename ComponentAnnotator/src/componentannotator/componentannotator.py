@@ -9,6 +9,7 @@ from projectextractor.projectextractor import ProjectExtractor
 def get_label(distribution, taxonomy):
     return taxonomy[str(np.argmax(distribution))]
 
+
 class ComponentAnnotator:
     def __init__(self):
         self.project_extractor = ProjectExtractor(min_stars=100, last_pushed_date="2022-01-01")
@@ -22,6 +23,7 @@ class ComponentAnnotator:
         for project in abandoned_projects:
             print(f"- {project['name']} ({project['html_url']})")
             ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
+            self._annotate_file(project['name'], project['html_url'], ["java"])
             print(ret)
 
     def _annotate_file(self, project_name: str, remote: str, languages: List[str]):
@@ -50,6 +52,3 @@ class ComponentAnnotator:
         annotations_df = pd.DataFrame(entries)
 
         return annotations_df, taxonomy
-
-if __name__ == "__main__":
-    ComponentAnnotator().annotate_files()

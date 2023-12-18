@@ -2,14 +2,18 @@ version: "3.8"
 services:
   pipeline:     # This is our stuff
     build:
-      context: ./
+      context: ./ComponentAnnotator
       dockerfile: ./docker/Dockerfile     # TODO: Make this
+    ports:
+      - "8669:8669"
     stdin_open: true
     tty: true
     volumes:
       - type: bind
-        source: .
-        target: /pipeline   # yeah.
+        source: /ComponentAnnotator/
+        target: /ComponentAnnotator/componentannotator
+    links:
+      - 'api:auto-fl'
 
   api:
     build:
