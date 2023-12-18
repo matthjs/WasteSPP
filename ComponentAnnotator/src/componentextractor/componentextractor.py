@@ -15,8 +15,9 @@ class ComponentExtractor:
         self.arcan_graphs: str = ""
         self.arcan_script: str = "../arcan/arcan.sh"
         self.arcan_path: str = ""
-        self.arcan_out = None
+        self.arcan_out: str = ""
         self.logs_path: str = "../arcan"
+        self.repository_path: str = ""
 
     """
     Run arcan
@@ -29,7 +30,7 @@ class ComponentExtractor:
         """
         return exists(path)
 
-    def run_arcan(self, cfg, project, language) -> None:
+    def run_arcan(self, project: str, language) -> None:
         """
         Runs the script to extract the graphs using Arcan. It also checks if the project has already been processed,
          and if so, it skips it.
@@ -39,17 +40,17 @@ class ComponentExtractor:
         :return:
         """
         # What is the point of this line? Is project a GitHub URL string?
-        check_path = join(cfg.arcan_graphs, project.replace('/', '|'), '.completed')
+        check_path = join(self.arcan_graphs, project.replace('/', '|'), '.completed')
         completed = self.check_status(check_path)
         try:
             if completed:
                 logger.info(f"Skipping {project} as it has already been processed")
                 return
 
-            command = [cfg.arcan_script]
+            command = [self.arcan_script]
 
             args = [project, quote(project.replace('/', '|')),
-                    language, cfg.arcan_path, cfg.repository_path, cfg.arcan_out, join(cfg.logs_path, 'arcan')]
+                    language, self.arcan_path, self.repository_path, self.arcan_out, join(self.logs_path, 'arcan')]
 
             command.extend(args)
 
@@ -70,7 +71,7 @@ class ComponentExtractor:
         finally:
             if not completed:
                 logger.info(f"Cleaning up {project} repository")
-                repo_path = join(cfg.repository_path, project.replace('/', '|'))
+                repo_path = join(self.repository_path, project.replace('/', '|'))
                 shutil.rmtree(repo_path, ignore_errors=True)
             return
 

@@ -4,6 +4,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 import requests
+
+from componentextractor.componentextractor import ComponentExtractor
 from projectextractor.projectextractor import ProjectExtractor
 
 def get_label(distribution, taxonomy):
@@ -13,6 +15,7 @@ def get_label(distribution, taxonomy):
 class ComponentAnnotator:
     def __init__(self):
         self.project_extractor = ProjectExtractor(min_stars=100, last_pushed_date="2022-01-01")
+        self.component_extractor = ComponentExtractor()
 
     def annotate_files(self):
         """
@@ -22,9 +25,9 @@ class ComponentAnnotator:
 
         for project in abandoned_projects:
             print(f"- {project['name']} ({project['html_url']})")
-            ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
-            self._annotate_file(project['name'], project['html_url'], ["java"])
-            print(ret)
+            self.component_extractor.run_arcan(project['html_url'], "java")
+            # ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
+            # print(ret)
 
     def _annotate_file(self, project_name: str, remote: str, languages: List[str]):
         url = 'http://auto-fl:8000/label/files'
