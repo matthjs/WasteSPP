@@ -44,8 +44,8 @@ services:
     ports:
         - "5432:5432"
     volumes:
-      - ../auto_fl_db:/var/lib/postgresql/data
-      - ./docker/sql:/docker-entrypoint-initdb.d/
+      - ./auto_fl_db:/var/lib/postgresql/data
+      - ./AutoFL/docker/sql:/docker-entrypoint-initdb.d/
 
   adminer:
     image: adminer
