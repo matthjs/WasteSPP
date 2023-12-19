@@ -27,7 +27,7 @@ class ComponentAnnotator:
 
     def annotate_files(self):
         """
-        Uses the project extractor to find abandoned github projects,
+        Uses the project extractor to find abandoned GitHub projects,
         then runs the arcan tool (encapsulated in component_extractor) to get component information
         and in after that runs the annotator (auto-fl) to get file level annotations (weak labels)
         for all the files in the project.
@@ -36,9 +36,9 @@ class ComponentAnnotator:
 
         for project in abandoned_projects:
             print(f"- {project['name']} ({project['html_url']})")
-            # self.component_extractor.run_arcan(project['html_url'], "java")
-            ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
-            print(ret)
+            self.component_extractor.run_arcan(project['html_url'], "JAVA")
+            # ret, _ = self._annotate_file(project['name'], project['html_url'], ["java"])
+            # print(ret)
 
     def _annotate_file(self, project_name: str, remote: str, languages: List[str]):
         """

@@ -3,7 +3,7 @@ services:
   pipeline:     # This is our stuff
     build:
       context: ./ComponentAnnotator
-      dockerfile: ./docker/Dockerfile     # TODO: Make this
+      dockerfile: ./docker/Dockerfile
     ports:
       - "8669:8669"
     stdin_open: true

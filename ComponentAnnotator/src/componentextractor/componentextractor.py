@@ -1,4 +1,5 @@
 import shutil
+import networkx as nx
 from os.path import join, exists
 from pathlib import Path
 from shlex import quote
@@ -7,17 +8,24 @@ from subprocess import call
 import hydra
 import pandas as pd
 from loguru import logger
+import os
 from omegaconf import DictConfig
 
 
 class ComponentExtractor:
     def __init__(self):
         self.arcan_graphs: str = ""
-        self.arcan_script: str = "../arcan/arcan.sh"
-        self.arcan_path: str = ""
-        self.arcan_out: str = ""
-        self.logs_path: str = "../arcan"
-        self.repository_path: str = ""
+        self.arcan_script: str = "/component-annotator/src/arcan/run-arcan.sh"           # NOTE: arcan.bat should be run on Windows
+        self.arcan_path: str = "/component-annotator/src/arcan"
+        self.repository_path: str = "/component-annotator/data/raw"
+        self.arcan_out: str = "/component-annotator/data/arcan-out"
+        self.logs_path: str = "/component-annotator/data/arcan-log"
+
+        self.component_graph = None
+
+    def component_graph(self, project: str, language = "JAVA"):
+        self.run_arcan(project, language)
+        return nx.read_graphml(self.arcan_out)
 
     """
     Run arcan
@@ -39,6 +47,7 @@ class ComponentExtractor:
         :param language:
         :return:
         """
+
         # What is the point of this line? Is project a GitHub URL string?
         check_path = join(self.arcan_graphs, project.replace('/', '|'), '.completed')
         completed = self.check_status(check_path)
