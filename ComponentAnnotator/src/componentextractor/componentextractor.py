@@ -17,7 +17,7 @@ class ComponentExtractor:
         self.arcan_graphs: str = ""
         self.arcan_script: str = "/component-annotator/src/arcan/run-arcan.sh"           # NOTE: arcan.bat should be run on Windows
         self.arcan_path: str = "/component-annotator/src/arcan"
-        self.repository_path: str = "/component-annotator/data/raw"
+        self.repository_path: str = "/component-annotator/data/repository"
         self.arcan_out: str = "/component-annotator/data/arcan-out"
         self.logs_path: str = "/component-annotator/data/arcan-log"
 
@@ -38,27 +38,75 @@ class ComponentExtractor:
         """
         return exists(path)
 
-    def run_arcan(self, project: str, language) -> None:
+    def run_arcan(self, project_name: str, project_url: str, language: str) -> None:
         """
         Runs the script to extract the graphs using Arcan. It also checks if the project has already been processed,
          and if so, it skips it.
         :param cfg:
-        :param project:
+        :param project_name:
         :param language:
         :return:
         """
 
         # What is the point of this line? Is project a GitHub URL string?
-        check_path = join(self.arcan_graphs, project.replace('/', '|'), '.completed')
+        # check_path = join(self.arcan_graphs, project_url.replace('/', '|'), '.completed')
+
+        #completed = self.check_status(check_path)
+        try:
+           #if completed:
+           #     logger.info(f"Skipping {project_name} as it has already been processed")
+           #     return
+
+            command = [self.arcan_script]
+
+            args = [project_url, project_name,
+                    language, self.arcan_path, self.repository_path, self.arcan_out, join(self.logs_path, 'arcan')]
+
+            command.extend(args)
+
+            logger.info(f"Running command: {' '.join(command)}")
+
+            call(" ".join(command), shell=True)
+
+            #if not completed:
+            #     with open(check_path, 'wt') as outf:
+            #        logger.info(f"Creating file {outf.name}")
+
+            logger.info(f"Finished to extract graph for {project_name}")
+
+        except Exception as e:
+            logger.error(f"Failed to extract graph for {project_name}")
+            logger.error(f"{e}")
+
+        finally:
+            #if not completed:
+            #    logger.info(f"Cleaning up {project_name} repository")
+            #    repo_path = join(self.repository_path, project_name.replace('/', '|'))
+            #    shutil.rmtree(repo_path, ignore_errors=True)
+            return
+
+    def run_arcan_OTHER(self, project_name: str,  language: str) -> None:
+        """
+        Runs the script to extract the graphs using Arcan. It also checks if the project has already been processed,
+         and if so, it skips it.
+        :param cfg:
+        :param project_name:
+        :param language:
+        :return:
+        """
+
+        # What is the point of this line? Is project a GitHub URL string?
+        check_path = join(self.arcan_graphs, project_name.replace('/', '|'), '.completed')
+
         completed = self.check_status(check_path)
         try:
             if completed:
-                logger.info(f"Skipping {project} as it has already been processed")
+                logger.info(f"Skipping {project_name} as it has already been processed")
                 return
 
             command = [self.arcan_script]
 
-            args = [project, quote(project.replace('/', '|')),
+            args = [project_name, quote(project_name.replace('/', '|')),
                     language, self.arcan_path, self.repository_path, self.arcan_out, join(self.logs_path, 'arcan')]
 
             command.extend(args)
@@ -68,47 +116,18 @@ class ComponentExtractor:
             call(" ".join(command), shell=True)
 
             if not completed:
-                with open(check_path, 'wt') as outf:
+                 with open(check_path, 'wt') as outf:
                     logger.info(f"Creating file {outf.name}")
 
-            logger.info(f"Finished to extract graph for {project}")
+            logger.info(f"Finished to extract graph for {project_name}")
 
         except Exception as e:
-            logger.error(f"Failed to extract graph for {project}")
+            logger.error(f"Failed to extract graph for {project_name}")
             logger.error(f"{e}")
 
         finally:
             if not completed:
-                logger.info(f"Cleaning up {project} repository")
-                repo_path = join(self.repository_path, project.replace('/', '|'))
+                logger.info(f"Cleaning up {project_name} repository")
+                repo_path = join(self.repository_path, project_name.replace('/', '|'))
                 shutil.rmtree(repo_path, ignore_errors=True)
             return
-
-    # @hydra.main(config_path="../conf", config_name="main", version_base="1.2")
-    # def extract_graph(self, cfg: DictConfig):
-    #     """
-    #     Extracts graph from a project including the git history (augmented data).
-    #     :param cfg:
-    #     :return:
-    #     """
-    #     projects = pd.read_csv(cfg.dataset)
-    #     if 'language' not in projects:
-    #         projects['language'] = [cfg.language] * len(projects)
-    #
-    #     projects['language'] = projects['language'].str.upper()
-    #     projects = projects[projects['language'] == cfg.language.upper()]
-    #     languages = projects['language']
-    #     projects = projects['full_name']
-    #
-    #     logger.info(f"Extracting graphs for {len(projects)} projects")
-    #
-    #     Path(join(cfg.logs_path, 'arcan')).mkdir(parents=True, exist_ok=True)
-    #     if cfg.num_workers > 1:
-    #         logger.info(f"Using {cfg.num_workers} workers")
-    #         from multiprocessing import Pool
-    #         with Pool(cfg.num_workers) as p:
-    #             p.starmap(self.run_arcan, zip([cfg] * len(projects), projects, languages))
-    #     else:
-    #         for i, (project, language) in enumerate(zip(projects, languages)):
-    #             logger.info(f"Extracting features for {project} - Progress: {(i + 1) / len(projects) * 100:.2f}%")
-    #             self.run_arcan(cfg, project, language)
