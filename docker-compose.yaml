@@ -10,8 +10,8 @@ services:
     tty: true
     volumes:
       - type: bind
-        source: /ComponentAnnotator/
-        target: /ComponentAnnotator/componentannotator
+        source: /ComponentAnnotator
+        target: /ComponentAnnotator/component-annotator
     links:
       - 'api:auto-fl'
 

@@ -25,7 +25,7 @@ class ComponentAnnotator:
     It utilizes the ProjectExtractor to find abandoned projects, the ComponentExtractor to run the
     Arcan tool for component information, and the auto-fl annotator for file-level annotations (weak labels).
     """
-    def __init__(self, language: str):
+    def __init__(self, language: str = "java"):
         """
         Initializes the ComponentAnnotator with default values for the ProjectExtractor.
 
