@@ -20,8 +20,8 @@ services:
       context: ./AutoFL
       dockerfile: ./docker/Dockerfile
     ports:
-      - "8000:8000"
       - "8888:8888"
+      - "8000:8000"
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     volumes:

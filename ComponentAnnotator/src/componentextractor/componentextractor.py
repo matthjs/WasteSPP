@@ -1,5 +1,6 @@
 import shutil
 import networkx as nx
+import os
 from os.path import join, exists
 from shlex import quote
 from subprocess import call
@@ -39,6 +40,25 @@ def arcan_language_str(language: str) -> str:
 
     return language.upper()
 
+
+def find_file_by_extension(directory: str, target_extension: str) -> str:
+    """
+    Find a file in the specified directory with the given extension.
+
+    Args:
+        directory (str): The path to the directory.
+        target_extension (str): The target extension to search for.
+
+    Returns:
+        str: The filename if a matching file is found, otherwise, an empty string.
+    """
+    for filename in os.listdir(directory):
+        if filename.endswith(target_extension):
+            return filename
+
+    print(f"No file with extension {target_extension} found in {directory}")
+    return ""
+
 class ComponentExtractor:
     """
     The ComponentExtractor class is responsible for extracting component graphs using the Arcan tool.
@@ -54,14 +74,14 @@ class ComponentExtractor:
         self.arcan_script: str = "/component-annotator/src/arcan/run-arcan.sh"           # NOTE: arcan.bat should be run on Windows
         self.arcan_path: str = "/component-annotator/src/arcan"
         self.repository_path: str = "/component-annotator/data/repository"
-        self.arcan_out: str = "/component-annotator/data/arcan-out"
+        self.arcan_out: str = "/component-annotator/data/"
         self.logs_path: str = "/component-annotator/data/arcan-log"
         self.language: str = arcan_language_str(language)
-        self.component_graph = None
 
-    def component_graph(self, project: str, language = "JAVA"):
-        self.run_arcan(project, language)
-        return nx.read_graphml(self.arcan_out)
+    def component_graph(self, project: str, project_url: str):
+        self.run_arcan(project, project_url)
+        directory: str = self.arcan_out + "arcanOutput/" + project + "/"
+        return nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
 
     def run_arcan(self, project_name: str, project_url: str) -> None:
         """

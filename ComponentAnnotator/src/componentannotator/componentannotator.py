@@ -44,7 +44,9 @@ class ComponentAnnotator:
         for all the files in the project.
         """
         ret, _ = self._annotate_file(project_name, project_url)
-        self.component_extractor.run_arcan(project_name, project_url)
+        graph = self.component_extractor.component_graph(project_name, project_url)
+
+        print(graph)
 
     def annotate_projects(self) -> None:    # For now void function but see later whether it needs to return something
         """
