@@ -87,17 +87,12 @@ class ComponentExtractor:
         """
         Runs the script to extract the graphs using Arcan.
         NOTE: Functionality of checking if project is already analyzed is removed for now.
+        TODO: Add functionality so that it can skip already analyzed projects.
         Args:
             project_name (str): The name of the GitHub project.
             project_url (str): The URL of the GitHub project.
         """
-        # check_path = join(self.arcan_graphs, project_url.replace('/', '|'), '.completed')
-
-        #completed = self.check_status(check_path)
         try:
-           #if completed:
-           #     logger.info(f"Skipping {project_name} as it has already been processed")
-           #     return
 
             command = [self.arcan_script]
 
@@ -110,22 +105,11 @@ class ComponentExtractor:
 
             call(" ".join(command), shell=True)
 
-            #if not completed:
-            #     with open(check_path, 'wt') as outf:
-            #        logger.info(f"Creating file {outf.name}")
-
             logger.info(f"Finished to extract graph for {project_name}")
 
         except Exception as e:
             logger.error(f"Failed to extract graph for {project_name}")
             logger.error(f"{e}")
-
-        finally:
-            #if not completed:
-            #    logger.info(f"Cleaning up {project_name} repository")
-            #    repo_path = join(self.repository_path, project_name.replace('/', '|'))
-            #    shutil.rmtree(repo_path, ignore_errors=True)
-            return
 
     def run_arcan_OTHER(self, project_name: str,  language: str) -> None:
         """

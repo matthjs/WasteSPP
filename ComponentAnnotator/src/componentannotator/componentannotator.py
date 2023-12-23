@@ -1,10 +1,10 @@
-from typing import List
 import numpy as np
 import pandas as pd
 import requests
 
 from componentextractor.componentextractor import ComponentExtractor
 from projectextractor.projectextractor import ProjectExtractor
+from componentaggregator.componentaggregator import ComponentAggregator
 
 def get_label(distribution, taxonomy):
     """
@@ -34,6 +34,7 @@ class ComponentAnnotator:
         """
         self.project_extractor = ProjectExtractor(min_stars=100, last_pushed_date="2022-01-01", language=language)
         self.component_extractor = ComponentExtractor(language)
+        self.component_aggregator = ComponentAggregator()
         self.language = language
 
     def annotate_project(self, project_name, project_url):
@@ -43,10 +44,11 @@ class ComponentAnnotator:
         and in after that runs the annotator (auto-fl) to get file level annotations (weak labels)
         for all the files in the project.
         """
-        ret, _ = self._annotate_file(project_name, project_url)
-        graph = self.component_extractor.component_graph(project_name, project_url)
+        file_annot = self._annotate_file(project_name, project_url)
+        comp_graph = self.component_extractor.component_graph(project_name, project_url)
 
-        print(graph)
+        self.component_aggregator.set_state(comp_graph, file_annot)
+
 
     def annotate_projects(self) -> None:    # For now void function but see later whether it needs to return something
         """
@@ -58,7 +60,7 @@ class ComponentAnnotator:
         for project in abandoned_projects:
             self.annotate_project(project['name'], project['html_url'])
 
-    def _annotate_file(self, project_name: str, remote: str):
+    def _annotate_file(self, project_name: str, remote: str) -> pd.DataFrame:
         """
         Request to auto-fl to annotate a GitHub project.
 
@@ -66,7 +68,11 @@ class ComponentAnnotator:
             project_name: Name of the GitHub project.
             remote: HTML URL of the GitHub project.
 
-        NOTE: Only Java project are fully supported and tested with the auto-fl annotator.
+        Returns:
+            pd.DataFrame: A pandas DataFrame containing information about annotated files.
+
+        Notes:
+            - Only Java projects are fully supported and tested with the auto-fl annotator.
         """
         url = 'http://auto-fl:8000/label/files'
         analysis = {
@@ -92,5 +98,4 @@ class ComponentAnnotator:
 
         file_annot = pd.DataFrame(file_entries)
         # Skip package and project level annotations
-
-        return file_annot, taxonomy
+        return file_annot

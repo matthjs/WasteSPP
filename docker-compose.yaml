@@ -53,6 +53,7 @@ services:
     ports:
       - "8080:8080"
 
+  # ui service not necessarily needed
   ui:
     build:
       context: ./AutoFL/autofl-ui/
