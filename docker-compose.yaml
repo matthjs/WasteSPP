@@ -54,17 +54,17 @@ services:
       - "8080:8080"
 
   # ui service not necessarily needed
-  ui:
-    build:
-      context: ./AutoFL/autofl-ui/
-      dockerfile: ./docker/Dockerfile
-    ports:
-      - "8501:8501"
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
-    volumes:
-      - type: bind
-        source: /AutoFL/autofl-ui/
-        target: /AutoFL/autofl-ui
-    links:
-      - 'api:auto-fl'
+#  ui:
+#    build:
+#      context: ./AutoFL/autofl-ui/
+#      dockerfile: ./docker/Dockerfile
+#    ports:
+#      - "8501:8501"
+#    stdin_open: true # docker run -i
+#    tty: true        # docker run -t
+#    volumes:
+#      - type: bind
+#        source: /AutoFL/autofl-ui/
+#        target: /AutoFL/autofl-ui
+#    links:
+#      - 'api:auto-fl'

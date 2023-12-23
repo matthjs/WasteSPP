@@ -50,12 +50,12 @@ class ComponentAnnotator:
         self.component_aggregator.set_state(comp_graph, file_annot)
 
 
-    def annotate_projects(self) -> None:    # For now void function but see later whether it needs to return something
+    def annotate_projects(self):
         """
         Uses the project extractor to find abandoned GitHub projects. Then annotates the files
         and extracts the components.
         """
-        abandoned_projects = self.project_extractor.find_abandoned_projects(10)
+        abandoned_projects = self.project_extractor.find_abandoned_projects(3)
 
         for project in abandoned_projects:
             self.annotate_project(project['name'], project['html_url'])
