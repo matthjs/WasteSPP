@@ -53,7 +53,7 @@ class ComponentAnnotator:
         # component_extractor handles arcan failed exceptions.
         dep_graph = self.component_extractor.dependency_graph()
 
-        self.component_aggregator.set_state(components, file_annot, dep_graph)
+        self.component_aggregator.set_state(components, file_annot, dep_graph, project_name)
         self.component_aggregator.create_aggregate()
 
 

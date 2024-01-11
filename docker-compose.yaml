@@ -29,23 +29,6 @@ services:
         source: /AutoFL
         target: /AutoFL/autofl
 
-  database_comp:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: "component_annotator"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "temp"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
-      interval: 1s
-      timeout: 5s
-      retries: 10
-    ports:
-        - "3232:3232"
-    volumes:
-      - ./db:/var/lib/postgresql/data
-
   db:
     image: postgres
     restart: always
