@@ -1,5 +1,6 @@
 import shutil
 import networkx as nx
+from cdlib import algorithms
 import os
 from os.path import join, exists
 from shlex import quote
@@ -78,25 +79,72 @@ class ComponentExtractor:
         self.logs_path: str = "/component-annotator/data/arcan-log"
         self.language: str = arcan_language_str(language)
 
-    def component_graph(self, project: str, project_url: str):
-        self.run_arcan(project, project_url)
-        directory: str = self.arcan_out + "arcanOutput/" + project + "/"
-        return nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
+        # Class data.
+        self.dep_graph = None
+        self.project_name = None
+        self.project_url = None
+        self.valid = False
 
-    def run_arcan(self, project_name: str, project_url: str) -> None:
+    def set_project(self, project: str, project_url: str):
+        """
+        Args:
+            project (str): The name of the GitHub project.
+            project_url (str): The URL of the GitHub project.
+        """
+        self.project_name = project
+        self.project_url = project_url
+        self.valid = True
+        return self
+
+    def dependency_graph(self):
+        """
+        Returns the dependency graph for a given project.
+
+        Returns:
+            nx.Graph: The dependency graph.
+        """
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
+        self._init_dep_graph()
+        return self.dep_graph
+
+    def infomap_components(self):
+        """
+        Runs the Infomap algorithm on the dependency graph and returns the resulting communities.
+
+        Returns:
+            cdlib.classes.node_clustering.NodeClustering: The result of the Infomap algorithm.
+        """
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
+        self._init_dep_graph()
+
+        return algorithms.infomap(self.dep_graph)
+
+    def _init_dep_graph(self):
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
+        self._run_arcan()
+        directory: str = self.arcan_out + "arcanOutput/" + self.project_name + "/"
+        self.dep_graph = nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
+
+    def _run_arcan(self) -> None:
         """
         Runs the script to extract the graphs using Arcan.
         NOTE: Functionality of checking if project is already analyzed is removed for now.
         TODO: Add functionality so that it can skip already analyzed projects.
-        Args:
-            project_name (str): The name of the GitHub project.
-            project_url (str): The URL of the GitHub project.
         """
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
         try:
 
             command = [self.arcan_script]
 
-            args = [project_url, project_name,
+            args = [self.project_url, self.project_name,
                     self.language, self.arcan_path, self.repository_path, self.arcan_out, join(self.logs_path, 'arcan')]
 
             command.extend(args)
@@ -105,10 +153,10 @@ class ComponentExtractor:
 
             call(" ".join(command), shell=True)
 
-            logger.info(f"Finished to extract graph for {project_name}")
+            logger.info(f"Finished to extract graph for {self.project_name}")
 
         except Exception as e:
-            logger.error(f"Failed to extract graph for {project_name}")
+            logger.error(f"Failed to extract graph for {self.project_name}")
             logger.error(f"{e}")
 
     def run_arcan_OTHER(self, project_name: str,  language: str) -> None:

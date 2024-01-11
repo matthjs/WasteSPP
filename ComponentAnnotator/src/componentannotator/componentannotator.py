@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import requests
+from loguru import logger
 
 from componentextractor.componentextractor import ComponentExtractor
 from projectextractor.projectextractor import ProjectExtractor
@@ -44,10 +45,16 @@ class ComponentAnnotator:
         and in after that runs the annotator (auto-fl) to get file level annotations (weak labels)
         for all the files in the project.
         """
-        file_annot = self._annotate_file(project_name, project_url)
-        comp_graph = self.component_extractor.component_graph(project_name, project_url)
+        file_annot = self._annotate_file(project_name, project_url)     # Failed? Then this returns empty DataFrame.
+        if file_annot.empty:
+            raise RuntimeError("auto-fl failed to annotate project.")
 
-        self.component_aggregator.set_state(comp_graph, file_annot)
+        components = self.component_extractor.set_project(project_name, project_url).infomap_components()
+        # component_extractor handles arcan failed exceptions.
+        dep_graph = self.component_extractor.dependency_graph()
+
+        self.component_aggregator.set_state(components, file_annot, dep_graph)
+        self.component_aggregator.create_aggregate()
 
 
     def annotate_projects(self):
@@ -55,10 +62,13 @@ class ComponentAnnotator:
         Uses the project extractor to find abandoned GitHub projects. Then annotates the files
         and extracts the components.
         """
-        abandoned_projects = self.project_extractor.find_abandoned_projects(3)
+        abandoned_projects = self.project_extractor.find_abandoned_projects(5)
 
         for project in abandoned_projects:
-            self.annotate_project(project['name'], project['html_url'])
+            try:
+                self.annotate_project(project['name'], project['html_url'])
+            except RuntimeError as exc:
+                logger.error(f"{exc}")
 
     def _annotate_file(self, project_name: str, remote: str) -> pd.DataFrame:
         """

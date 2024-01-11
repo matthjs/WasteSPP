@@ -27,7 +27,7 @@ class ProjectExtractor(object):
     Uses GitHub REST API to get GitHub repositories deemed abandoned.
     """
     def __init__(self, min_stars: int, last_pushed_date: str, language: str = "java",
-                 exclude_archived: bool = False):
+                 only_archived: bool = True):
         """
         Initializes the ProjectExtractor instance.
 
@@ -41,7 +41,7 @@ class ProjectExtractor(object):
         self.min_stars = min_stars
         self.last_pushed_date = last_pushed_date
         self.language = language
-        self.exclude_archived = exclude_archived
+        self.only_archived = only_archived
 
     def find_abandoned_projects(self, amount: int = 10) -> List[Dict]:
         """
@@ -74,8 +74,8 @@ class ProjectExtractor(object):
         TODO: See if search by topics is relevant.
         """
         query = f"language:{self.language} stars:>={self.min_stars} pushed:<{self.last_pushed_date}"
-        if self.exclude_archived:
-            query += " archived:false"
+        if self.only_archived:
+            query += " archived:true"
 
         # If above max results per page, adjust page num.
         page_num = 1

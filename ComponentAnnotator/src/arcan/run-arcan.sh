@@ -10,12 +10,13 @@ OUT_PATH=$6
 LOGS_PATH=$7
 
 # /$PROJECT_NAME removed from REPISITORY_PATH for n
+ # -v before this originally
 
 /component-annotator/src/arcan/arcan.sh analyze \
               -i $REPOSITORY_PATH/$PROJECT_NAME -p $PROJECT_NAME \
               --remote $PROJECT \
               -o $OUT_PATH -l $PROG_LANG -f $ARCAN_PATH/filters.yaml \
-              output.writeDependencyGraph=true \     # -v before this originally
+              output.writeDependencyGraph=true \
               output.writeAffected=false \
               output.writeComponentMetrics=False \
               output.writeSmellCharacteristics=False \
