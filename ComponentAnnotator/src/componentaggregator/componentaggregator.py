@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy import create_engine
-
+from loguru import logger
 
 class ComponentAggregator:
     def __init__(self):
@@ -15,12 +15,13 @@ class ComponentAggregator:
         self.components = None
         self.dep_graph = None
         self.file_annot = None
+        self.valid = False
 
-        self.db_username = "postgres"
-        self.db_password = "temp"
-        self.db_host = "db"
-        self.db_port = "5432"
-        self.db_name = "auto_fl"
+        # Hardcoded see docker-compose yaml file.
+        self.db_username = "pipeline_user"
+        self.db_password = "pipeline_pw"
+        self.db_host = "db_pipeline"
+        self.db_name = "pipeline"
         self.engine = create_engine(
             f'postgresql+psycopg://{self.db_username}:{self.db_password}@{self.db_host}/{self.db_name}')
 
@@ -32,29 +33,32 @@ class ComponentAggregator:
         Returns:
             pd.DataFrame: Dataframe containing files in the project with component and component-label information.
         """
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
         communities = self.components.communities
 
         df_project = pd.DataFrame(columns=self.file_annot.columns)
         df_project["component"] = None  # Add column.
 
-        for comm_id, comm in enumerate(communities):
+        for community_id, community in enumerate(communities):
             label_cnt = {}      # Counts
             df_component = pd.DataFrame(columns=self.file_annot.columns)
 
-            for node_id in comm:
+            for node_id in community:
                 node_attr = self.dep_graph.nodes[node_id]
                 file_path = node_attr['filePathRelative']
 
-                #print("examining file: ", file_path)
+                logger.info(f"Examining file: {file_path}")
                 row = self.file_annot.loc[self.file_annot['path'] == file_path]
                 file_label_arr = row['label'].values
 
                 if not file_label_arr:          # path not in dataframe for some reason.
-                    #print("label not found")
+                    logger.info("Label not found.")
                     continue
 
                 file_label = file_label_arr[0]
-                #print("label found -> ", file_label)
+                logger.info(f"Label found -> {file_label}.")
 
                 df_component = pd.concat([df_component, row])      # Append row.
 
@@ -69,11 +73,13 @@ class ComponentAggregator:
                 majority_label = "None"     # No counts for some reason.
 
             df_component['componentlabel'] = majority_label
-            df_component['component'] = comm_id
+            df_component['component'] = community_id
 
             df_project = pd.concat([df_project, df_component])
 
         df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
+        logger.info(f"Wrote component annotations for {self.project_name} to database.")
+
         return df_project           # Return dataframe
 
 
@@ -91,3 +97,4 @@ class ComponentAggregator:
         self.dep_graph = dep_graph
         self.file_annot = file_annot
         self.project_name = project_name
+        self.valid = True

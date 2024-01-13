@@ -29,6 +29,25 @@ services:
         source: /AutoFL
         target: /AutoFL/autofl
 
+  # Separate database for storing component labelling.
+  db_pipeline:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: "pipeline"
+      POSTGRES_USER: "pipeline_user"
+      POSTGRES_PASSWORD: "pipeline_pw"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    ports:
+        - "4232:4232"
+    volumes:
+      - ./pipelinedb:/var/lib/postgresql/data
+      - ./ComponentAnnotator/docker/sql:/docker-entrypoint-initdb.d/
+
   db:
     image: postgres
     restart: always

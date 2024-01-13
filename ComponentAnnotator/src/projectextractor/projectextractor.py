@@ -1,5 +1,7 @@
 from typing import List, Dict, Tuple
 import requests
+
+
 def print_structure(repo_url: str):
     """
     Print the structure of a GitHub repository.

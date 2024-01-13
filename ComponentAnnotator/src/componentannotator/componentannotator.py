@@ -1,13 +1,12 @@
 from typing import List
-
 import numpy as np
 import pandas as pd
 import requests
 from loguru import logger
-
 from componentextractor.componentextractor import ComponentExtractor
 from projectextractor.projectextractor import ProjectExtractor
 from componentaggregator.componentaggregator import ComponentAggregator
+
 
 def get_label(distribution, taxonomy):
     """
@@ -40,6 +39,8 @@ class ComponentAnnotator:
         self.component_aggregator = ComponentAggregator()
         self.language = language
 
+        logger.info(f"Initialized ComponentAnnotator (project programming language -> {language})")
+
     def annotate_project(self, project_name, project_url) -> pd.DataFrame:
         """
         Annotate a single GitHub project
@@ -50,6 +51,8 @@ class ComponentAnnotator:
         Returns:
             pd.DataFrame: pd.DataFrame: Dataframe containing files in the project with component and component-label information.
         """
+        logger.info(f"Retrieving and annotating components of project `{project_name}`")
+
         file_annot = self._annotate_file(project_name, project_url)     # Failed? Then this returns empty DataFrame.
         if file_annot.empty:
             raise RuntimeError("Auto-fl failed to annotate project.")
@@ -62,6 +65,7 @@ class ComponentAnnotator:
 
         # Dataframe contains component identifier and component label for each file.
         df_components = self.component_aggregator.create_aggregate()
+        logger.info(f"Finished annotating components of project `{project_name}`")
         return df_components
 
     def annotate_projects(self, num_proj: int) -> List[pd.DataFrame]:
@@ -76,6 +80,7 @@ class ComponentAnnotator:
             List[pd.DataFrame]: For each project annotations for the project including component annotations.
         """
         abandoned_projects = self.project_extractor.find_abandoned_projects(num_proj)
+        logger.info("Finished retrieving abandoned projects from GitHub")
 
         df_components_list = []
 
