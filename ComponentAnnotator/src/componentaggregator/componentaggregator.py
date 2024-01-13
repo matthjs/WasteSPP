@@ -18,19 +18,21 @@ class ComponentAggregator:
 
         self.db_username = "postgres"
         self.db_password = "temp"
-        self.db_host = "0.0.0.0"
+        self.db_host = "db"
         self.db_port = "5432"
         self.db_name = "auto_fl"
         self.engine = create_engine(
-            f'postgresql://{self.db_username}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}')
+            f'postgresql+psycopg://{self.db_username}:{self.db_password}@{self.db_host}/{self.db_name}')
 
-    def create_aggregate(self):
+    def create_aggregate(self) -> pd.DataFrame:
         """
         Creates an aggregated representation of components based on the provided graph and file annotations.
+        NOTE: Also puts resulting dataframe inside a postgres database.
+
+        Returns:
+            pd.DataFrame: Dataframe containing files in the project with component and component-label information.
         """
         communities = self.components.communities
-
-        # print(self.file_annot)
 
         df_project = pd.DataFrame(columns=self.file_annot.columns)
         df_project["component"] = None  # Add column.
@@ -71,12 +73,8 @@ class ComponentAggregator:
 
             df_project = pd.concat([df_project, df_component])
 
-        print(df_project)
-        print(df_project.columns)
-
-        # Iterate over each project and write its DataFrames to separate tables
-        #table_name = f'{project_name}_table_{idx}'  # Create a unique table name for each DataFrame
         df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
+        return df_project           # Return dataframe
 
 
     def set_state(self, components, file_annot: pd.DataFrame, dep_graph, project_name: str):

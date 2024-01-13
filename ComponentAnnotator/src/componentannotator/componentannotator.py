@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 import requests
@@ -38,37 +40,52 @@ class ComponentAnnotator:
         self.component_aggregator = ComponentAggregator()
         self.language = language
 
-    def annotate_project(self, project_name, project_url):
+    def annotate_project(self, project_name, project_url) -> pd.DataFrame:
         """
         Annotate a single GitHub project
         then runs the arcan tool (encapsulated in component_extractor) to get component information
         and in after that runs the annotator (auto-fl) to get file level annotations (weak labels)
         for all the files in the project.
+
+        Returns:
+            pd.DataFrame: pd.DataFrame: Dataframe containing files in the project with component and component-label information.
         """
         file_annot = self._annotate_file(project_name, project_url)     # Failed? Then this returns empty DataFrame.
         if file_annot.empty:
-            raise RuntimeError("auto-fl failed to annotate project.")
+            raise RuntimeError("Auto-fl failed to annotate project.")
 
         components = self.component_extractor.set_project(project_name, project_url).infomap_components()
         # component_extractor handles arcan failed exceptions.
         dep_graph = self.component_extractor.dependency_graph()
 
         self.component_aggregator.set_state(components, file_annot, dep_graph, project_name)
-        self.component_aggregator.create_aggregate()
 
+        # Dataframe contains component identifier and component label for each file.
+        df_components = self.component_aggregator.create_aggregate()
+        return df_components
 
-    def annotate_projects(self):
+    def annotate_projects(self, num_proj: int) -> List[pd.DataFrame]:
         """
         Uses the project extractor to find abandoned GitHub projects. Then annotates the files
         and extracts the components.
+
+        Args:
+            num_proj (int): Number of random projects from GitHub to annotate.
+
+        Returns:
+            List[pd.DataFrame]: For each project annotations for the project including component annotations.
         """
-        abandoned_projects = self.project_extractor.find_abandoned_projects(5)
+        abandoned_projects = self.project_extractor.find_abandoned_projects(num_proj)
+
+        df_components_list = []
 
         for project in abandoned_projects:
             try:
-                self.annotate_project(project['name'], project['html_url'])
+                df_components_list.append(self.annotate_project(project['name'], project['html_url']))
             except RuntimeError as exc:
                 logger.error(f"{exc}")
+
+        return df_components_list
 
     def _annotate_file(self, project_name: str, remote: str) -> pd.DataFrame:
         """

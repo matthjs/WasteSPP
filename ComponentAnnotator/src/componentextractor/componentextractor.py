@@ -84,6 +84,7 @@ class ComponentExtractor:
         self.project_name = None
         self.project_url = None
         self.valid = False
+        self.arcan_run = False
 
     def set_project(self, project: str, project_url: str):
         """
@@ -93,6 +94,7 @@ class ComponentExtractor:
         """
         self.project_name = project
         self.project_url = project_url
+        self.arcan_run = False
         self.valid = True
         return self
 
@@ -106,7 +108,9 @@ class ComponentExtractor:
         if not self.valid:
             raise ValueError("Illegal state -> project not set.")
 
-        self._init_dep_graph()
+        if not self.arcan_run:
+            self._init_dep_graph()
+
         return self.dep_graph
 
     def infomap_components(self):
@@ -119,7 +123,8 @@ class ComponentExtractor:
         if not self.valid:
             raise ValueError("Illegal state -> project not set.")
 
-        self._init_dep_graph()
+        if not self.arcan_run:
+            self._init_dep_graph()
 
         return algorithms.infomap(self.dep_graph)
 
@@ -128,6 +133,7 @@ class ComponentExtractor:
             raise ValueError("Illegal state -> project not set.")
 
         self._run_arcan()
+        self.arcan_run = True
         directory: str = self.arcan_out + "arcanOutput/" + self.project_name + "/"
         self.dep_graph = nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
 
