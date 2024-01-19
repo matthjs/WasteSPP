@@ -106,7 +106,7 @@ class ComponentExtractor:
             nx.Graph: The dependency graph.
         """
         if not self.valid:
-            raise ValueError("Illegal state -> project not set.")
+            raise ValueError("ComponentExtractor illegal state -> project not set or arcan failed")
 
         self._init_dep_graph()
 
@@ -123,7 +123,7 @@ class ComponentExtractor:
 
     def _init_dep_graph(self):
         if not self.valid:
-            raise ValueError("Illegal state -> project not set.")
+            raise ValueError("ComponentExtractor illegal state -> project not set or arcan failed")
 
         if not self.arcan_run:
             self._run_arcan()
@@ -156,7 +156,9 @@ class ComponentExtractor:
             call(" ".join(command), shell=True)
 
             logger.info(f"Finished to extract graph for {self.project_name}")
+            logger.debug("Passed A-9, A-10 (forwarding to Arcan successful)")
 
         except Exception as e:
             logger.error(f"Failed to extract graph for {self.project_name}")
             logger.error(f"{e}")
+            self.valid = False

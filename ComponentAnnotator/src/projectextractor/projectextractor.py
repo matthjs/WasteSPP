@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple
 import requests
-
+from loguru import logger
 
 def print_structure(repo_url: str):
     """

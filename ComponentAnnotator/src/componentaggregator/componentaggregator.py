@@ -37,6 +37,7 @@ class ComponentAggregator:
             raise ValueError("Illegal state -> project not set.")
 
         communities = self.components.communities
+        logger.debug(f"Look at communities to see if A-14 is satisfied: {communities}")
 
         df_project = pd.DataFrame(columns=self.file_annot.columns)
         df_project["component"] = None  # Add column.
@@ -49,16 +50,16 @@ class ComponentAggregator:
                 node_attr = self.dep_graph.nodes[node_id]
                 file_path = node_attr['filePathRelative']
 
-                logger.info(f"Examining file: {file_path}")
+                #logger.info(f"Examining file: {file_path}")
                 row = self.file_annot.loc[self.file_annot['path'] == file_path]
                 file_label_arr = row['label'].values
 
                 if not file_label_arr:          # path not in dataframe for some reason.
-                    logger.info("Label not found.")
+                    #logger.info("Label not found.")
                     continue
 
                 file_label = file_label_arr[0]
-                logger.info(f"Label found -> {file_label}.")
+                #logger.info(f"Label found -> {file_label}.")
 
                 df_component = pd.concat([df_component, row])      # Append row.
 
@@ -77,8 +78,11 @@ class ComponentAggregator:
 
             df_project = pd.concat([df_project, df_component])
 
+        logger.debug(f"Printing dataframe")
+        print(df_project)
         df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
         logger.info(f"Wrote component annotations for {self.project_name} to database.")
+        logger.debug("Passed A-16 (database success)")
 
         return df_project           # Return dataframe
 

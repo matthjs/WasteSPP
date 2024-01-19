@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import requests
 from loguru import logger
+from requests import HTTPError
+
 from componentextractor.componentextractor import ComponentExtractor
 from projectextractor.projectextractor import ProjectExtractor
 from componentaggregator.componentaggregator import ComponentAggregator
@@ -57,9 +59,13 @@ class ComponentAnnotator:
         if file_annot.empty:
             raise RuntimeError("Auto-fl failed to annotate project.")
 
+        logger.debug("Passed A-5, A-8 (auto-fl succeeded and returns a dataframe)")
+
         components = self.component_extractor.set_project(project_name, project_url).infomap_components()
         # component_extractor handles arcan failed exceptions.
         dep_graph = self.component_extractor.dependency_graph()
+
+        logger.debug("Passed A-12, A-13 (implied by component_extractor success)")
 
         self.component_aggregator.set_state(components, file_annot, dep_graph, project_name)
 
@@ -79,8 +85,13 @@ class ComponentAnnotator:
         Returns:
             List[pd.DataFrame]: For each project annotations for the project including component annotations.
         """
-        abandoned_projects = self.project_extractor.find_abandoned_projects(num_proj)
-        logger.info("Finished retrieving abandoned projects from GitHub")
+        abandoned_projects = []
+        try:
+            abandoned_projects = self.project_extractor.find_abandoned_projects(num_proj)
+            logger.info("Finished retrieving abandoned projects from GitHub")
+            logger.debug("Passed A-2, A-3 (retrieved abandoned GitHub projects)")
+        except HTTPError as exc:
+            logger.error("Failed to retrieve abandoned projects from GitHub")
 
         df_components_list = []
 
@@ -89,6 +100,10 @@ class ComponentAnnotator:
                 df_components_list.append(self.annotate_project(project['name'], project['html_url']))
             except RuntimeError as exc:
                 logger.error(f"{exc}")
+                logger.debug("Passed A-7 (error recovery)")
+            except ValueError as exc:
+                logger.error(f"{exc}")
+                logger.debug("Passed A-11 (error recovery)")
 
         return df_components_list
 
