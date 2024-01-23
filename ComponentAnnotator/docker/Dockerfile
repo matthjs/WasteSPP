@@ -13,10 +13,10 @@ RUN poetry install -n --no-ansi  --without dev
 RUN apt-get update && \
     apt-get install -y openjdk-17-jdk && \
     apt-get install -y ant && \
+    apt-get install -y chromium-driver && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/oracle-jdk17-installer;
-
 # Set the environment variable PYTHONPATH to include the source folder
 ENV PYTHONPATH=/component-annotator/src
 

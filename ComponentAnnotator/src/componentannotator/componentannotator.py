@@ -74,6 +74,22 @@ class ComponentAnnotator:
         logger.info(f"Finished annotating components of project `{project_name}`")
         return df_components
 
+    def annotate_project_list(self, projects) -> List[pd.DataFrame]:
+        df_components_list = []
+
+        for project in projects:
+            try:
+                df_components_list.append(self.annotate_project(project['name'], project['html_url']))
+            except RuntimeError as exc:
+                logger.error(f"{exc}")
+                logger.debug("Passed A-7 (error recovery)")
+            except ValueError as exc:
+                logger.error(f"{exc}")
+                logger.debug("Passed A-11 (error recovery)")
+
+        return df_components_list
+
+
     def annotate_projects(self, num_proj: int) -> List[pd.DataFrame]:
         """
         Uses the project extractor to find abandoned GitHub projects. Then annotates the files
