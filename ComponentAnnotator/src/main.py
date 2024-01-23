@@ -1,5 +1,6 @@
 import pickle
 
+import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 from selenium import webdriver
@@ -66,16 +67,16 @@ def waste_service_links():
 
 def load_projects():
     # Load the projects dictionary from the pickle file
-    with open('projects.pkl', 'rb') as pickle_file:
+    with open('./src/projects.pkl', 'rb') as pickle_file:
         loaded_projects = pickle.load(pickle_file)
 
     # Print or use the loaded projects dictionary
     return loaded_projects
 
 if __name__ == "__main__":
-    waste_service_links()
+    #waste_service_links()
 
-    print(load_projects())
+    ComponentAnnotator("java").annotate_project_list(load_projects())
     # Set up the WebDriver (make sure you have the appropriate driver installed)
     # Download the driver from https://sites.google.com/chromium.org/driver/
     # Replace 'path/to/chromedriver' with the actual path to your chromedriver executable
@@ -84,5 +85,8 @@ if __name__ == "__main__":
     #logger.debug("Passed A-4 (logging is active)")
     #logger.debug("Passed A-6 (pipeline and auto-fl run in separate containers)")
     #logger.debug("Passed A-17 (databases are running in separate containers)")
-    #ComponentAnnotator("java").annotate_projects(3)
+    #frames = ComponentAnnotator("java").annotate_projects(5)
+    #df = pd.concat(frames)
+    #print(df)
+    #df.to_csv('output.csv', index=False)
     #print(ComponentAnnotator("java").annotate_project("OOP_final_project", "https://github.com/matthjs/OOP_final_project.git"))

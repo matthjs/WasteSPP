@@ -37,7 +37,7 @@ class ComponentAggregator:
             raise ValueError("Illegal state -> project not set.")
 
         communities = self.components.communities
-        logger.debug(f"Look at communities to see if A-14 is satisfied: {communities}")
+        # logger.debug(f"Look at communities to see if A-14 is satisfied: {communities}")
 
         df_project = pd.DataFrame(columns=self.file_annot.columns)
         df_project["component"] = None  # Add column.
@@ -75,14 +75,19 @@ class ComponentAggregator:
 
             df_component['componentlabel'] = majority_label
             df_component['component'] = community_id
+            df_component['mismatch'] = df_component['label'] != df_component['componentlabel']
 
             df_project = pd.concat([df_project, df_component])
 
         logger.debug(f"Printing dataframe")
-        print(df_project)
+
+        df_project['projectname'] = self.project_name
+
         df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
         logger.info(f"Wrote component annotations for {self.project_name} to database.")
         logger.debug("Passed A-16 (database success)")
+
+        print(df_project)
 
         return df_project           # Return dataframe
 

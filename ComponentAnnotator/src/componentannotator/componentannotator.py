@@ -77,15 +77,13 @@ class ComponentAnnotator:
     def annotate_project_list(self, projects) -> List[pd.DataFrame]:
         df_components_list = []
 
-        for project in projects:
+        for project_name, project_url in projects:
             try:
-                df_components_list.append(self.annotate_project(project['name'], project['html_url']))
+                df_components_list.append(self.annotate_project(project_name, project_url))
             except RuntimeError as exc:
                 logger.error(f"{exc}")
-                logger.debug("Passed A-7 (error recovery)")
             except ValueError as exc:
                 logger.error(f"{exc}")
-                logger.debug("Passed A-11 (error recovery)")
 
         return df_components_list
 
