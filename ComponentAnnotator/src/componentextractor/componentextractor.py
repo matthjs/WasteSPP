@@ -1,9 +1,7 @@
-import shutil
 import networkx as nx
 from cdlib import algorithms
 import os
 from os.path import join, exists
-from shlex import quote
 from subprocess import call
 from loguru import logger
 
@@ -34,9 +32,9 @@ def arcan_language_str(language: str) -> str:
     if language in ["JAVA", "CPP", "C", "ASML", "CSHARP", "PYTHON"]:
         return language
 
-    if language == "C++":       # check if this is how it is for auto-fl
+    if language == "C++":
         language = "CPP"
-    elif language == "C#":      # check if this is how it is for auto-fl
+    elif language == "C#":
         language = "CSHARP"
 
     return language.upper()
@@ -140,8 +138,7 @@ class ComponentExtractor:
     def _run_arcan(self) -> None:
         """
         Runs the script to extract the graphs using Arcan.
-        NOTE: Functionality of checking if project is already analyzed is removed for now.
-        TODO: Add functionality so that it can skip already analyzed projects.
+        NOTE: Functionality of checking if project is already analyzed is removed.
         """
         if not self.valid:
             raise ValueError("Illegal state -> project not set.")

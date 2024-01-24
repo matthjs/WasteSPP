@@ -73,7 +73,6 @@ class ProjectExtractor(object):
 
         Returns:
             Tuple[Dict, Dict]: A tuple containing request parameters and headers.
-        TODO: See if search by topics is relevant.
         """
         query = f"language:{self.language} stars:>={self.min_stars} pushed:<{self.last_pushed_date}"
         if self.only_archived:

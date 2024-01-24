@@ -1,16 +1,18 @@
 import pickle
+from typing import Set, Tuple, List
 
 import pandas as pd
-from bs4 import BeautifulSoup
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.keys import Keys
 from componentannotator.componentannotator import ComponentAnnotator
 from loguru import logger
 
 def waste_service_links():
+    """
+    This function visits the wasteservice webpage and extracts all the GitHub projects from it
+    as (name, url) pairs.
+    """
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -54,14 +56,13 @@ def waste_service_links():
             link = row.find_elements(By.TAG_NAME, "a")
             # Check if the index is within the range of the cells
             if project_column_index < len(cells):
-                projects.add( (cells[1].text, link[1].get_attribute("href")) )
-                #print(cells[1].text)
-                #print(link[1].get_attribute("href"))
+                if cells[1].text != "tohu-generator" and cells[1].text != "Usherb-IFT585-TP1-Link-layer":
+                    projects.add( (cells[1].text, link[1].get_attribute("href")) )
 
+    projects_list = list(projects)
     # Extract and print column names
-
     with open('projects.pkl', 'wb') as file:
-        pickle.dump(projects, file)
+        pickle.dump(projects_list, file)
     # Close the browser
     driver.quit()
 
@@ -73,13 +74,25 @@ def load_projects():
     # Print or use the loaded projects dictionary
     return loaded_projects
 
-if __name__ == "__main__":
-    #waste_service_links()
+def process(tuples_param: Set[Tuple], batch_size=50):
+    annot = ComponentAnnotator("java")
+    #print(len(tuples_param))
+    tuples = list(tuples_param)
+    for i in range(0, len(tuples), batch_size):
+        logger.debug(i)
+        batch = tuples[i:i + batch_size]
+        frames = annot.annotate_project_list(batch)
+        if len(frames) > 0:
+            pd.concat(frames).to_csv(f'output{i}.csv', index=False)
+            #print(batch)
 
-    ComponentAnnotator("java").annotate_project_list(load_projects())
-    # Set up the WebDriver (make sure you have the appropriate driver installed)
-    # Download the driver from https://sites.google.com/chromium.org/driver/
-    # Replace 'path/to/chromedriver' with the actual path to your chromedriver executable
+if __name__ == "__main__":
+    #ComponentAnnotator("java").annotate_project("tohu-generator", "https://github.com/rah/tohu-generator")
+    #waste_service_links()
+    #projects = load_projects()
+
+    #process(projects)
+    #ComponentAnnotator("java").annotate_project_list()
 
     #logger.debug("Passed A-1 (assuming this is run through docker)")
     #logger.debug("Passed A-4 (logging is active)")
@@ -89,4 +102,5 @@ if __name__ == "__main__":
     #df = pd.concat(frames)
     #print(df)
     #df.to_csv('output.csv', index=False)
-    #print(ComponentAnnotator("java").annotate_project("OOP_final_project", "https://github.com/matthjs/OOP_final_project.git"))
+    df = ComponentAnnotator("java").annotate_project("OOP_final_project", "https://github.com/matthjs/OOP_final_project.git")
+    df.to_csv("oop.csv", index=False)

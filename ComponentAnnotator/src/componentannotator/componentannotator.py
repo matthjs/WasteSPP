@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import pandas as pd
 import requests
@@ -74,12 +74,23 @@ class ComponentAnnotator:
         logger.info(f"Finished annotating components of project `{project_name}`")
         return df_components
 
-    def annotate_project_list(self, projects) -> List[pd.DataFrame]:
+    def annotate_project_list(self, projects: List[Tuple]) -> List[pd.DataFrame]:
+        """
+        See annotate_projects. Difference here is that projects is a list of tuples.
+
+        Args:
+            projects (List[Tuple]): (project name, project html url) pairs.
+
+        Returns:
+            List[pd.DataFrame]: For each project annotations for the project including component annotations
+        """
         df_components_list = []
+        excluded = ["ase4j", "tohu-generator", "Usherb-IFT585-TP1-Link-layer", "sudo-ku", "redmineissuedumptool", "dwr-toplink", "Dessolation-Messenger-of-Disservice", "generator-example", "bits4j"]
 
         for project_name, project_url in projects:
             try:
-                df_components_list.append(self.annotate_project(project_name, project_url))
+                if project_name not in excluded:
+                    df_components_list.append(self.annotate_project(project_name, project_url))
             except RuntimeError as exc:
                 logger.error(f"{exc}")
             except ValueError as exc:

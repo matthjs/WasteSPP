@@ -41,6 +41,18 @@ class ComponentAggregator:
 
         df_project = pd.DataFrame(columns=self.file_annot.columns)
         df_project["component"] = None  # Add column.
+        df_project['componentlabel'] = None
+        df_project['component'] = None
+        df_project['mismatch'] = None
+        df_project['case'] = None
+
+        print(self.file_annot)
+
+        if len(communities) == 0:
+            logger.error("No communities from infomap detected. Returning empty dataframe")
+            new_row = {'projectname' : self.project_name, "case" : "no_communities_found"}
+            df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
+            return df_project
 
         for community_id, community in enumerate(communities):
             label_cnt = {}      # Counts
@@ -50,16 +62,16 @@ class ComponentAggregator:
                 node_attr = self.dep_graph.nodes[node_id]
                 file_path = node_attr['filePathRelative']
 
-                #logger.info(f"Examining file: {file_path}")
+                logger.debug(f"Examining file: {file_path}")
                 row = self.file_annot.loc[self.file_annot['path'] == file_path]
                 file_label_arr = row['label'].values
 
                 if not file_label_arr:          # path not in dataframe for some reason.
-                    #logger.info("Label not found.")
+                    logger.debug("Label not found.")
                     continue
 
                 file_label = file_label_arr[0]
-                #logger.info(f"Label found -> {file_label}.")
+                logger.debug(f"Label found -> {file_label}.")
 
                 df_component = pd.concat([df_component, row])      # Append row.
 
@@ -81,9 +93,16 @@ class ComponentAggregator:
 
         logger.debug(f"Printing dataframe")
 
-        df_project['projectname'] = self.project_name
+        if df_project.empty:
+            logger.debug("no matches")
+            new_row = {'projectname' : self.project_name, "case" : "no_file_matches"}
+            df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
+        else:
+            df_project['case'] = "success"
 
+        df_project['projectname'] = self.project_name
         df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
+        df_project.to_csv(f'output_{self.project_name}.csv', index=False)
         logger.info(f"Wrote component annotations for {self.project_name} to database.")
         logger.debug("Passed A-16 (database success)")
 
