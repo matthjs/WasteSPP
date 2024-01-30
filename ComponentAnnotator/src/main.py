@@ -44,6 +44,9 @@ def waste_service_links():
 
     projects = set()
 
+    dead_projects = ["ase4j", "tohu-generator", "Usherb-IFT585-TP1-Link-layer", "sudo-ku",
+                     "redmineissuedumptool", "dwr-toplink", "Dessolation-Messenger-of-Disservice", "generator-example", "bits4j"]
+
     # Get project name and project url pairs.
     if project_column_index is not None:
         # Find all rows in the table body
@@ -56,7 +59,7 @@ def waste_service_links():
             link = row.find_elements(By.TAG_NAME, "a")
             # Check if the index is within the range of the cells
             if project_column_index < len(cells):
-                if cells[1].text != "tohu-generator" and cells[1].text != "Usherb-IFT585-TP1-Link-layer":
+                if cells[1].text not in dead_projects:
                     projects.add( (cells[1].text, link[1].get_attribute("href")) )
 
     projects_list = list(projects)
@@ -87,20 +90,9 @@ def process(tuples_param: Set[Tuple], batch_size=50):
             #print(batch)
 
 if __name__ == "__main__":
-    #ComponentAnnotator("java").annotate_project("tohu-generator", "https://github.com/rah/tohu-generator")
     #waste_service_links()
     #projects = load_projects()
-
     #process(projects)
-    #ComponentAnnotator("java").annotate_project_list()
 
-    logger.debug("Passed A-1 (assuming this is run through docker)")
-    logger.debug("Passed A-4 (logging is active)")
-    logger.debug("Passed A-6 (pipeline and auto-fl run in separate containers)")
-    logger.debug("Passed A-17 (databases are running in separate containers)")
-    #frames = ComponentAnnotator("java").annotate_projects(5)
-    #df = pd.concat(frames)
-    #print(df)
-    #df.to_csv('output.csv', index=False)
     df = ComponentAnnotator("java").annotate_project("OOP_final_project", "https://github.com/matthjs/OOP_final_project.git")
     df.to_csv("oop.csv", index=False)

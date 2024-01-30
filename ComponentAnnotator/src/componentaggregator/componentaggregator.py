@@ -25,92 +25,6 @@ class ComponentAggregator:
         self.engine = create_engine(
             f'postgresql+psycopg://{self.db_username}:{self.db_password}@{self.db_host}/{self.db_name}')
 
-    def create_aggregate(self) -> pd.DataFrame:
-        """
-        Creates an aggregated representation of components based on the provided graph and file annotations.
-        NOTE: Also puts resulting dataframe inside a postgres database.
-
-        Returns:
-            pd.DataFrame: Dataframe containing files in the project with component and component-label information.
-        """
-        if not self.valid:
-            raise ValueError("Illegal state -> project not set.")
-
-        communities = self.components.communities
-        # logger.debug(f"Look at communities to see if A-14 is satisfied: {communities}")
-
-        df_project = pd.DataFrame(columns=self.file_annot.columns)
-        df_project["component"] = None  # Add column.
-        df_project['componentlabel'] = None
-        df_project['component'] = None
-        df_project['mismatch'] = None
-        df_project['case'] = None
-
-        print(self.file_annot)
-
-        if len(communities) == 0:
-            logger.error("No communities from infomap detected. Returning empty dataframe")
-            new_row = {'projectname' : self.project_name, "case" : "no_communities_found"}
-            df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
-            return df_project
-
-        for community_id, community in enumerate(communities):
-            label_cnt = {}      # Counts
-            df_component = pd.DataFrame(columns=self.file_annot.columns)
-
-            for node_id in community:
-                node_attr = self.dep_graph.nodes[node_id]
-                file_path = node_attr['filePathRelative']
-
-                logger.debug(f"Examining file: {file_path}")
-                row = self.file_annot.loc[self.file_annot['path'] == file_path]
-                file_label_arr = row['label'].values
-
-                if not file_label_arr:          # path not in dataframe for some reason.
-                    logger.debug("Label not found.")
-                    continue
-
-                file_label = file_label_arr[0]
-                logger.debug(f"Label found -> {file_label}.")
-
-                df_component = pd.concat([df_component, row])      # Append row.
-
-                if file_label in label_cnt:
-                    label_cnt[file_label] += 1
-                else:
-                    label_cnt[file_label] = 1
-
-            if label_cnt:
-                majority_label = max(label_cnt, key=label_cnt.get)
-            else:
-                majority_label = "None"     # No counts for some reason.
-
-            df_component['componentlabel'] = majority_label
-            df_component['component'] = community_id
-            df_component['mismatch'] = df_component['label'] != df_component['componentlabel']
-
-            df_project = pd.concat([df_project, df_component])
-
-        logger.debug(f"Printing dataframe")
-
-        if df_project.empty:
-            logger.debug("no matches")
-            new_row = {'projectname' : self.project_name, "case" : "no_file_matches"}
-            df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
-        else:
-            df_project['case'] = "success"
-
-        df_project['projectname'] = self.project_name
-        df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
-        df_project.to_csv(f'output_{self.project_name}.csv', index=False)
-        logger.info(f"Wrote component annotations for {self.project_name} to database.")
-        logger.debug("Passed A-16 (database success)")
-
-        print(df_project)
-
-        return df_project           # Return dataframe
-
-
     def set_state(self, components, file_annot: pd.DataFrame, dep_graph, project_name: str):
         """
         Sets the state of the ComponentAggregator with the provided graph and file annotations.
@@ -126,3 +40,124 @@ class ComponentAggregator:
         self.file_annot = file_annot
         self.project_name = project_name
         self.valid = True
+
+    def create_aggregate(self) -> pd.DataFrame:
+        """
+        Creates an aggregated representation of components based on the provided graph and file annotations.
+        NOTE: Also puts resulting dataframe inside a postgres database.
+
+        Returns:
+            pd.DataFrame: Dataframe containing files in the project with component and component-label information.
+        """
+        if not self.valid:
+            raise ValueError("Illegal state -> project not set.")
+
+        communities = self.components.communities
+
+        df_project = self._initialize_project_dataframe()
+        if not communities:
+            return self._handle_no_communities(df_project)
+
+        for community_id, community in enumerate(communities):
+            df_component = self._create_component_dataframe(community)
+            majority_label = self._get_majority_label(df_component)
+
+            df_project = self._update_project_dataframe(df_project, df_component, community_id, majority_label)
+
+        self._save_to_database(df_project)
+
+        return df_project
+
+    def _initialize_project_dataframe(self) -> pd.DataFrame:
+        """
+        Initializes the project dataframe.
+
+        Returns:
+            pd.DataFrame: Initialized project dataframe.
+        """
+        df_project = pd.DataFrame(columns=self.file_annot.columns)
+        df_project["component"] = None
+        df_project['componentlabel'] = None
+        df_project['mismatch'] = None
+        df_project['case'] = None
+        return df_project
+
+    def _handle_no_communities(self, df_project: pd.DataFrame) -> pd.DataFrame:
+        """
+        Handles the case where no communities are found.
+
+        Args:
+            df_project (pd.DataFrame): Project dataframe.
+
+        Returns:
+            pd.DataFrame: Updated project dataframe for the no communities case.
+        """
+        logger.error("No communities from infomap detected. Returning empty dataframe")
+        new_row = {'projectname': self.project_name, "case": "no_communities_found"}
+        df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
+        return df_project
+
+    def _create_component_dataframe(self, community) -> pd.DataFrame:
+        """
+        Creates a dataframe for a given community.
+
+        Args:
+            community: A community from the components.
+
+        Returns:
+            pd.DataFrame: Dataframe for the given community.
+        """
+        df_component = pd.DataFrame(columns=self.file_annot.columns)
+        for node_id in community:
+            node_attr = self.dep_graph.nodes[node_id]
+            file_path = node_attr['filePathRelative']
+            row = self.file_annot.loc[self.file_annot['path'] == file_path]
+            df_component = pd.concat([df_component, row])
+        return df_component
+
+    def _get_majority_label(self, df_component: pd.DataFrame) -> str:
+        """
+        Gets the majority label for a component.
+
+        Args:
+            df_component (pd.DataFrame): Dataframe for a component.
+
+        Returns:
+            str: Majority label.
+        """
+        label_counts = df_component['label'].value_counts()
+        majority_label = label_counts.idxmax() if not label_counts.empty else "None"
+        return majority_label
+
+    def _update_project_dataframe(self, df_project, df_component, community_id, component_label) -> pd.DataFrame:
+        """
+        Updates the project dataframe with information from a component.
+
+        Args:
+            df_project (pd.DataFrame): Project dataframe.
+            df_component (pd.DataFrame): Dataframe for a component.
+            community_id: ID of the current community.
+            component_label: label for the component.
+        """
+        df_component['componentlabel'] = component_label
+        df_component['component'] = community_id
+        df_component['mismatch'] = df_component['label'] != df_component['componentlabel']
+        return pd.concat([df_project, df_component])
+
+    def _save_to_database(self, df_project: pd.DataFrame):
+        """
+        Saves the project dataframe to the database and CSV file.
+
+        Args:
+            df_project (pd.DataFrame): Project dataframe.
+        """
+        if df_project.empty:
+            new_row = {'projectname': self.project_name, "case": "no_file_matches"}
+            df_project = pd.concat([df_project, pd.DataFrame([new_row])], ignore_index=True)
+        else:
+            df_project['case'] = "success"
+
+        df_project['projectname'] = self.project_name
+        df_project.to_sql(self.project_name, self.engine, if_exists='replace', index=False)
+        df_project.to_csv(f'output_{self.project_name}.csv', index=False)
+        logger.info(f"Wrote component annotations for {self.project_name} to database.")

@@ -55,8 +55,7 @@ def find_file_by_extension(directory: str, target_extension: str) -> str:
         if filename.endswith(target_extension):
             return filename
 
-    print(f"No file with extension {target_extension} found in {directory}")
-    return ""
+    raise ValueError(f"No file with extension {target_extension} found in {directory}")
 
 class ComponentExtractor:
     """
@@ -133,7 +132,8 @@ class ComponentExtractor:
             self.valid = False
             raise ValueError("ComponentExtractor illegal state -> project directory cannot be found")
 
-        self.dep_graph = nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
+        file = find_file_by_extension(directory, ".graphml")
+        self.dep_graph = nx.read_graphml(directory + file)
 
     def _run_arcan(self) -> None:
         """
@@ -157,7 +157,6 @@ class ComponentExtractor:
             call(" ".join(command), shell=True)
 
             logger.info(f"Finished to extract graph for {self.project_name}")
-            logger.debug("Passed A-9, A-10 (forwarding to Arcan successful)")
 
         except Exception as e:
             logger.error(f"Failed to extract graph for {self.project_name}")
