@@ -127,13 +127,13 @@ class ComponentExtractor:
             self._run_arcan()
         self.arcan_run = True
 
-        if self.dep_graph is None:
-            directory: str = self.arcan_out + "arcanOutput/" + self.project_name + "/"
-            if not os.path.exists(directory):
-                self.valid = False
-                raise ValueError("ComponentExtractor illegal state -> project directory cannot be found")
+        #if self.dep_graph is None:
+        directory: str = self.arcan_out + "arcanOutput/" + self.project_name + "/"
+        if not os.path.exists(directory):
+            self.valid = False
+            raise ValueError("ComponentExtractor illegal state -> project directory cannot be found")
 
-            self.dep_graph = nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
+        self.dep_graph = nx.read_graphml(directory + find_file_by_extension(directory, ".graphml"))
 
     def _run_arcan(self) -> None:
         """
