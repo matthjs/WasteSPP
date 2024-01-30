@@ -32,8 +32,7 @@ This project uses Docker. You can run the application as follows:
 
 ## Usage
 
-The dockerfile for the pipeline service runs a `main.py` file. To run the pipeline one needs to instantiate the `ComponentAnnotator` class inside `main.py`. By default the class is instantiated to support Java projects. Once the class is instantiated one can run the `annotate_projects` method to retrieve `num_proj` number of projects from GitHub and process them.
-Once can also provide GitHub projects manually using the `annotate_project` or `annotate_project_list` methods. 
+The dockerfile for the pipeline service runs a `main.py` file. To run the pipeline one needs to instantiate the `ComponentAnnotator` class inside `main.py`. By default the class is instantiated to support Java projects. Once the class is instantiated one can run the `annotate_projects` method to retrieve `num_proj` number of projects from GitHub and process them. Once can also provide GitHub projects manually using the `annotate_project` or `annotate_project_list` methods. 
 
 ## License
 
