@@ -79,7 +79,7 @@ def load_projects():
 
 def process(tuples_param: Set[Tuple], batch_size=50):
     annot = ComponentAnnotator("java")
-    #print(len(tuples_param))
+
     tuples = list(tuples_param)
     for i in range(0, len(tuples), batch_size):
         logger.debug(i)
@@ -87,7 +87,6 @@ def process(tuples_param: Set[Tuple], batch_size=50):
         frames = annot.annotate_project_list(batch)
         if len(frames) > 0:
             pd.concat(frames).to_csv(f'output{i}.csv', index=False)
-            #print(batch)
 
 if __name__ == "__main__":
     #waste_service_links()

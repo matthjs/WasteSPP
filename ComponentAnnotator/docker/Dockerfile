@@ -10,6 +10,7 @@ RUN poetry config virtualenvs.create false
 RUN poetry install -n --no-ansi  --without dev
 
 # Ensure Java is here
+# Chronium-driver is needed so that we access wasteservice website from pipeline.
 RUN apt-get update && \
     apt-get install -y openjdk-17-jdk && \
     apt-get install -y ant && \
