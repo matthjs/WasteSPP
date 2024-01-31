@@ -77,21 +77,18 @@ def load_projects():
     # Print or use the loaded projects dictionary
     return loaded_projects
 
-def process(tuples_param: Set[Tuple], batch_size=50):
+def process(tuples_param: Set[Tuple]):
     annot = ComponentAnnotator("java")
 
     tuples = list(tuples_param)
-    for i in range(0, len(tuples), batch_size):
-        logger.debug(i)
-        batch = tuples[i:i + batch_size]
-        frames = annot.annotate_project_list(batch)
-        if len(frames) > 0:
-            pd.concat(frames).to_csv(f'output{i}.csv', index=False)
+    frames = annot.annotate_project_list(tuples)
+    if len(frames) > 0:
+        pd.concat(frames).to_csv(f'output_wasteservice.csv', index=False)
 
 if __name__ == "__main__":
     #waste_service_links()
     #projects = load_projects()
+    #print(len(projects))
     #process(projects)
 
-    df = ComponentAnnotator("java").annotate_project("OOP_final_project", "https://github.com/matthjs/OOP_final_project.git")
-    df.to_csv("oop.csv", index=False)
+    ComponentAnnotator("java").annotate_projects(10)
