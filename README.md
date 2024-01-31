@@ -28,7 +28,7 @@ that they are comprised of.
 -->
 This project uses Docker. You can run the application as follows:
 
-- Run the docker-compose files to run all relevant services (`docker-compose up` or `docker-compose up --build`).
+- Run the docker-compose files to run all relevant services (`docker compose up` or `docker compose up --build`).
 
 ## Usage
 
