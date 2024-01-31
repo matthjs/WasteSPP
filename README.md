@@ -6,12 +6,6 @@
   </p>
 </p>
 
-## Table of Contents
-* [About the Project](#about-the-project)
-* [Running](#running)
-* [Usage](#usage)
-* [Acknowledgements](#acknowledgements)
-
 ## About The Project
 
 This project contains an automated pipeline that given a project from GitHub extracts the components based on the dependency graph
@@ -21,7 +15,7 @@ that they are comprised of.
 ## Getting started
 ### Prerequisites
 
-- [Docker v4.25](https://www.docker.com/get-started) or higher
+- [Docker v4.25](https://www.docker.com/get-started) or higher.
 
 ## Running
 <!--
