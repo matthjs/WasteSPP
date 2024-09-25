@@ -30,4 +30,4 @@ The dockerfile for the pipeline service runs a `main.py` file. To run the pipeli
 
 ## License
 
-This project is licensed under the MIT License - see the [license](./license.txt) file for details.
+This project is licensed under the  GNU GENERAL PUBLIC LICENSE - see the [license](./LICENSE) file for details.
